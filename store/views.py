@@ -6,10 +6,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from carts.models import CartItem
 from carts.views import _cart_id
 from category.models import Category
+from orders.models import OrderProduct
 from store.models import Product
 
 from .forms import ReviewForm
-from .models import ReviewRating
+from .models import ReviewRaiting
 
 # Create your views here
 
@@ -39,13 +40,24 @@ def store(request, category_slug=None):
 
 def product_detail(request, category_slug, product_slug):
     try:
-        product = Product.objects.get(category__slug=category_slug,slug=product_slug)
+        single_product = Product.objects.get(category__slug=category_slug,slug=product_slug)
         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request),product=product).exists()
     except Product.DoesNotExist:
-        product = None
-
+        single_product = None
         
-    context = {'product':product,'in_cart':in_cart}
+    reviews = ReviewRaiting.objects.filter(product=single_product,status =True)
+    if request.user.is_authenticated:
+        
+        try:
+            orderproduct = OrderProduct.objects.filter(user = request.user,product_id = single_product.id).exists()
+
+            
+        except OrderProduct.DoesNotExist:
+            orderproduct = None
+    else:
+           orderproduct = None
+        
+    context = {'product':single_product,'in_cart':in_cart,'orderproduct':orderproduct,'reviews':reviews}
 
 
     return render(request,'store/product_detail.html',context)
@@ -67,15 +79,15 @@ def submit_review(request, product_id):
     url = request.META.get('HTTP_REFERER')
     if request.method == 'POST':
         try:
-            reviews = ReviewRating.objects.get(user__id=request.user.id, product__id=product_id)
+            reviews = ReviewRaiting.objects.get(user__id=request.user.id, product__id=product_id)
             form = ReviewForm(request.POST, instance=reviews)
             form.save()
             messages.success(request, 'Thank you! Your review has been updated.')
             return redirect(url)
-        except ReviewRating.DoesNotExist:
+        except ReviewRaiting.DoesNotExist:
             form = ReviewForm(request.POST)
             if form.is_valid():
-                data = ReviewRating()
+                data = ReviewRaiting()
                 data.subject = form.cleaned_data['subject']
                 data.rating = form.cleaned_data['rating']
                 data.review = form.cleaned_data['review']

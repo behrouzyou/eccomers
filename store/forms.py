@@ -1,9 +1,9 @@
 from django import forms
 
-from .models import ReviewRating
+from .models import ReviewRaiting
 
 
 class ReviewForm(forms.ModelForm):
     class Meta:
-        model = ReviewRating
+        model = ReviewRaiting
         fields = ['subject', 'review', 'rating']  # noqa: RUF012
