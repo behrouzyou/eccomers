@@ -10,7 +10,7 @@ from orders.models import OrderProduct
 from store.models import Product
 
 from .forms import ReviewForm
-from .models import ReviewRaiting
+from .models import ProductGallery, ReviewRaiting
 
 # Create your views here
 
@@ -56,8 +56,14 @@ def product_detail(request, category_slug, product_slug):
             orderproduct = None
     else:
            orderproduct = None
+           
+    #Get the product gallery
+    product_gallery = ProductGallery.objects.filter(product=single_product)
+
         
-    context = {'product':single_product,'in_cart':in_cart,'orderproduct':orderproduct,'reviews':reviews}
+    context = {'product':single_product,'in_cart':in_cart,
+               'orderproduct':orderproduct,'reviews':reviews,'product_gallery':product_gallery}
+
 
 
     return render(request,'store/product_detail.html',context)
